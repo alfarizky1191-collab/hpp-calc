@@ -46,7 +46,7 @@ export default async function MaterialDetailPage({
 
   async function handleDelete() {
     'use server'
-    return await deleteMaterial(material.id)
+    return await deleteMaterial(material!.id)
   }
 
   return (
