@@ -41,11 +41,24 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
   // Fetch all non-deleted materials for the ingredient builder
   // Include INACTIVE so existing recipe items that reference them still resolve by name
   const supabase = await createClient()
-  const { data: materials } = await supabase
+  const { data: materialsRaw } = await supabase
     .from('materials')
     .select('id, name, base_unit, unit_cost')
     .is('deleted_at', null)
     .order('name')
+
+  // Merge materials from query + materials already in recipe items (in case some are not returned by query)
+  const materialMap = new Map<string, { id: string; name: string; base_unit: string; unit_cost: number }>()
+  for (const m of (materialsRaw ?? [])) {
+    materialMap.set(m.id, m)
+  }
+  for (const item of items) {
+    const mat = item.materials as { id: string; name: string; base_unit: string; unit_cost: number } | null
+    if (mat && !materialMap.has(mat.id)) {
+      materialMap.set(mat.id, mat)
+    }
+  }
+  const materials = Array.from(materialMap.values()).sort((a, b) => a.name.localeCompare(b.name))
 
   const initialItems = items.map((item) => ({
     material_id: item.material_id,
@@ -157,7 +170,7 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
             recipeId={recipe.id}
             yieldQuantity={recipe.yield_quantity}
             initialItems={initialItems}
-            materials={materials ?? []}
+            materials={materials}
             sellingPrice={menu?.selling_price ?? 0}
             targetFoodCost={menu?.target_food_cost ?? 30}
           />
