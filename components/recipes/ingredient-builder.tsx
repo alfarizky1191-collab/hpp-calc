@@ -97,7 +97,6 @@ export function IngredientBuilder({
     )
   }
 
-  // Live HPP preview
   const livePreview = (() => {
     const validRows = rows.filter((r) => r.materialId && r.quantity && parseFloat(r.quantity) >= 0)
     if (validRows.length === 0 || yieldQuantity <= 0) return null
@@ -160,7 +159,6 @@ export function IngredientBuilder({
 
   return (
     <div className="space-y-4">
-      {/* Ingredient rows */}
       <div className="space-y-2">
         {rows.map((row, idx) => {
           const mat = matMap.get(row.materialId)
@@ -178,7 +176,9 @@ export function IngredientBuilder({
                   onValueChange={(v) => { if (v) updateRow(row.key, 'materialId', v) }}
                 >
                   <SelectTrigger className="h-8 text-sm">
-                    <SelectValue placeholder="Pilih bahan..." />
+                    <SelectValue placeholder="Pilih bahan...">
+                      {mat?.name ?? (row.materialId ? 'Bahan tidak ditemukan' : undefined)}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {materials.map((m) => (
@@ -245,7 +245,6 @@ export function IngredientBuilder({
         Tambah Bahan
       </button>
 
-      {/* HPP Preview */}
       {hppPreview && (
         <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
           <p className="text-sm font-medium">Preview HPP Bahan</p>
@@ -287,7 +286,6 @@ export function IngredientBuilder({
         </div>
       )}
 
-      {/* Save button */}
       <Button type="button" onClick={handleSave} disabled={isPending}>
         <Save className="h-4 w-4 mr-2" />
         {isPending ? 'Menyimpan...' : 'Simpan Bahan Resep'}
