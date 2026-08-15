@@ -319,23 +319,24 @@ export async function getRecipeById(id: string) {
   const profile = await requireRole(['OWNER', 'ADMIN', 'STAFF'])
   const supabase = await createClient()
 
-  const [recipeRes, itemsRes] = await Promise.all([
-    supabase
-      .from('recipes')
-      .select(`*, menus!inner(id, name, selling_price, target_food_cost, organization_id)`)
-      .eq('id', id)
-      .eq('menus.organization_id', profile.organization_id)
-      .single(),
-    supabase
-      .from('recipe_items')
-      .select(`*, materials(id, name, base_unit, unit_cost, purchase_price)`)
-      .eq('recipe_id', id)
-      .order('created_at'),
-  ])
+  // Run recipe query first to validate org ownership
+  const recipeRes = await supabase
+    .from('recipes')
+    .select(`*, menus!inner(id, name, selling_price, target_food_cost, organization_id)`)
+    .eq('id', id)
+    .eq('menus.organization_id', profile.organization_id)
+    .single()
 
   if (recipeRes.error || !recipeRes.data) {
     return { recipe: null, items: [], error: 'Resep tidak ditemukan' }
   }
+
+  // Then fetch items — sequential so auth session is fully established
+  const itemsRes = await supabase
+    .from('recipe_items')
+    .select(`*, materials(id, name, base_unit, unit_cost, purchase_price)`)
+    .eq('recipe_id', id)
+    .order('created_at')
 
   return {
     recipe: recipeRes.data,

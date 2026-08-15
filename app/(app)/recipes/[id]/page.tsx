@@ -60,12 +60,6 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
   }
   const materials = Array.from(materialMap.values()).sort((a, b) => a.name.localeCompare(b.name))
 
-  // DEBUG — remove after fix confirmed
-  console.log('[recipe-page] items count:', items.length)
-  console.log('[recipe-page] materialsRaw count:', (materialsRaw ?? []).length)
-  console.log('[recipe-page] materials resolved:', materials.length)
-  console.log('[recipe-page] item[0] materials join:', items[0]?.materials)
-
   const initialItems = items.map((item) => ({
     material_id: item.material_id,
     quantity: item.quantity,
