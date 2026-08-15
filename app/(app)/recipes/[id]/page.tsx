@@ -38,12 +38,12 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
     return await deleteRecipe(recipe!.id)
   }
 
-  // Fetch active materials for the ingredient builder
+  // Fetch all non-deleted materials for the ingredient builder
+  // Include INACTIVE so existing recipe items that reference them still resolve by name
   const supabase = await createClient()
   const { data: materials } = await supabase
     .from('materials')
     .select('id, name, base_unit, unit_cost')
-    .eq('status', 'ACTIVE')
     .is('deleted_at', null)
     .order('name')
 
