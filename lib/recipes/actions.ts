@@ -110,7 +110,6 @@ export async function saveRecipeItems(
 
   const supabase = await createClient()
 
-  // Fetch current unit costs for all materials
   const materialIds = parsed.data.items.map((i) => i.materialId)
   const { data: materials, error: matErr } = await supabase
     .from('materials')
@@ -124,14 +123,12 @@ export async function saveRecipeItems(
 
   const matMap = new Map(materials.map((m) => [m.id, m]))
 
-  // Validate all materials exist
   for (const item of parsed.data.items) {
     if (!matMap.has(item.materialId)) {
       return { success: false, error: `Bahan dengan ID ${item.materialId} tidak ditemukan.` }
     }
   }
 
-  // Fetch recipe yield
   const { data: recipe } = await supabase
     .from('recipes')
     .select('yield_quantity')
@@ -140,7 +137,6 @@ export async function saveRecipeItems(
 
   if (!recipe) return { success: false, error: 'Resep tidak ditemukan.' }
 
-  // Build insert rows with unit_cost_snapshot
   const insertRows = parsed.data.items.map((item) => {
     const mat = matMap.get(item.materialId)!
     return {
@@ -152,7 +148,6 @@ export async function saveRecipeItems(
     }
   })
 
-  // Delete existing items and insert new ones atomically
   const { error: delErr } = await supabase
     .from('recipe_items')
     .delete()
@@ -163,7 +158,6 @@ export async function saveRecipeItems(
   const { error: insErr } = await supabase.from('recipe_items').insert(insertRows)
   if (insErr) return { success: false, error: 'Gagal menyimpan bahan resep.' }
 
-  // Calculate HPP preview using the engine
   const { totalMaterialCost, hppBahanPerUnit } = calculateRecipeCost({
     items: insertRows.map((r) => ({
       materialId: r.material_id,
@@ -246,7 +240,6 @@ export async function deleteRecipe(id: string): Promise<ActionResult> {
 
   const supabase = await createClient()
 
-  // Get recipe to find menu_id for revalidation
   const { data: recipe } = await supabase
     .from('recipes')
     .select('id, menu_id')
@@ -259,8 +252,6 @@ export async function deleteRecipe(id: string): Promise<ActionResult> {
     .eq('id', id)
 
   if (error) {
-    // FK violation: hpp_calculations references this recipe (ON DELETE RESTRICT)
-    // This is fixed by migration 20260815000011 — apply it if this error occurs.
     if (error.code === '23503') {
       return {
         success: false,
@@ -319,7 +310,7 @@ export async function getRecipeById(id: string) {
   const profile = await requireRole(['OWNER', 'ADMIN', 'STAFF'])
   const supabase = await createClient()
 
-  // Run recipe query first to validate org ownership
+  // Validate recipe + tenant ownership first.
   const recipeRes = await supabase
     .from('recipes')
     .select(`*, menus!inner(id, name, selling_price, target_food_cost, organization_id)`)
@@ -331,16 +322,59 @@ export async function getRecipeById(id: string) {
     return { recipe: null, items: [], error: 'Resep tidak ditemukan' }
   }
 
-  // Then fetch items — sequential so auth session is fully established
+  // Do NOT rely on Supabase's nested relation here. Fetch recipe_items first,
+  // then resolve material IDs explicitly. This prevents the UI from receiving
+  // a UUID when the PostgREST relationship is not hydrated.
   const itemsRes = await supabase
     .from('recipe_items')
-    .select(`*, materials(id, name, base_unit, unit_cost, purchase_price)`)
+    .select('id, recipe_id, material_id, quantity, unit, unit_cost_snapshot, total_cost, created_at')
     .eq('recipe_id', id)
     .order('created_at')
 
+  if (itemsRes.error) {
+    return { recipe: recipeRes.data, items: [], error: 'Gagal mengambil bahan resep' }
+  }
+
+  const rawItems = itemsRes.data ?? []
+  const materialIds = [...new Set(rawItems.map((item) => item.material_id).filter(Boolean))]
+
+  let materials: Array<{
+    id: string
+    name: string
+    base_unit: string
+    unit_cost: number
+    purchase_price?: number
+  }> = []
+
+  if (materialIds.length > 0) {
+    const materialsRes = await supabase
+      .from('materials')
+      .select('id, name, base_unit, unit_cost, purchase_price, deleted_at')
+      .in('id', materialIds)
+
+    if (materialsRes.error) {
+      return { recipe: recipeRes.data, items: rawItems, error: null }
+    }
+
+    materials = (materialsRes.data ?? []).map((m) => ({
+      id: m.id,
+      name: m.name,
+      base_unit: m.base_unit,
+      unit_cost: m.unit_cost,
+      purchase_price: m.purchase_price,
+    }))
+  }
+
+  const materialMap = new Map(materials.map((material) => [material.id, material]))
+  const items = rawItems.map((item) => ({
+    ...item,
+    // Keep the object shape expected by the recipe UI.
+    materials: materialMap.get(item.material_id) ?? null,
+  }))
+
   return {
     recipe: recipeRes.data,
-    items: itemsRes.data ?? [],
+    items,
     error: null,
   }
 }
