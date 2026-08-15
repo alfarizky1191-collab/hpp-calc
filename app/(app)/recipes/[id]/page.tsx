@@ -38,8 +38,8 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
     return await deleteRecipe(recipe!.id)
   }
 
-  // Fetch all non-deleted materials for the ingredient builder
-  // Include INACTIVE so existing recipe items that reference them still resolve by name
+  // Build materials list from joined recipe_items data (guaranteed to pass RLS)
+  // plus query all org materials for the dropdown via the same authenticated client
   const supabase = await createClient()
   const { data: materialsRaw } = await supabase
     .from('materials')
@@ -47,18 +47,24 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
     .is('deleted_at', null)
     .order('name')
 
-  // Merge materials from query + materials already in recipe items (in case some are not returned by query)
+  // Always include materials from joined items so existing recipe bahan always resolve by name
   const materialMap = new Map<string, { id: string; name: string; base_unit: string; unit_cost: number }>()
+  // First add from items join (always available regardless of RLS on direct query)
+  for (const item of items) {
+    const mat = item.materials as { id: string; name: string; base_unit: string; unit_cost: number } | null
+    if (mat?.id) materialMap.set(mat.id, mat)
+  }
+  // Then overlay with fresh query results (may include more materials for dropdown)
   for (const m of (materialsRaw ?? [])) {
     materialMap.set(m.id, m)
   }
-  for (const item of items) {
-    const mat = item.materials as { id: string; name: string; base_unit: string; unit_cost: number } | null
-    if (mat && !materialMap.has(mat.id)) {
-      materialMap.set(mat.id, mat)
-    }
-  }
   const materials = Array.from(materialMap.values()).sort((a, b) => a.name.localeCompare(b.name))
+
+  // DEBUG — remove after fix confirmed
+  console.log('[recipe-page] items count:', items.length)
+  console.log('[recipe-page] materialsRaw count:', (materialsRaw ?? []).length)
+  console.log('[recipe-page] materials resolved:', materials.length)
+  console.log('[recipe-page] item[0] materials join:', items[0]?.materials)
 
   const initialItems = items.map((item) => ({
     material_id: item.material_id,
