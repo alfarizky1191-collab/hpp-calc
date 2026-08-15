@@ -35,7 +35,7 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
 
   async function handleDelete() {
     'use server'
-    return await deleteRecipe(recipe.id)
+    return await deleteRecipe(recipe!.id)
   }
 
   // Fetch active materials for the ingredient builder

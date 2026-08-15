@@ -36,7 +36,7 @@ export default async function MenuDetailPage({ params }: MenuDetailPageProps) {
 
   async function handleDelete() {
     'use server'
-    return await deleteMenu(menu.id)
+    return await deleteMenu(menu!.id)
   }
 
   return (
