@@ -98,9 +98,7 @@ export default function LoginPage() {
     <Card>
       <CardHeader className="space-y-1">
         <div className="flex items-center gap-2 mb-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-            H
-          </div>
+          <img src="/logo.png" alt="HPP Manager" className="h-8 w-8 rounded-lg object-cover" />
           <span className="font-semibold text-lg">HPP Manager</span>
         </div>
         <CardTitle className="text-2xl">Masuk</CardTitle>
