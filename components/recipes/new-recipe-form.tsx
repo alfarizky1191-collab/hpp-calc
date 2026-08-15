@@ -65,7 +65,7 @@ export function NewRecipeForm({ menus }: NewRecipeFormProps) {
       <div className="space-y-2">
         <Label htmlFor="menuId">Menu <span className="text-destructive">*</span></Label>
         <input type="hidden" name="menuId" value={selectedMenuId} />
-        <Select value={selectedMenuId} onValueChange={setSelectedMenuId} required>
+        <Select value={selectedMenuId} onValueChange={(v) => v != null && setSelectedMenuId(v)} required>
           <SelectTrigger id="menuId">
             <SelectValue placeholder="Pilih menu...">
               {selectedMenuName ?? 'Pilih menu...'}

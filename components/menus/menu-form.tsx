@@ -94,7 +94,7 @@ export function MenuForm({ menu, categories }: MenuFormProps) {
       {/* Kategori — controlled, display label correctly */}
       <div className="space-y-2">
         <Label>Kategori</Label>
-        <Select value={categoryId} onValueChange={setCategoryId} disabled={isPending}>
+        <Select value={categoryId} onValueChange={(v) => v != null && setCategoryId(v)} disabled={isPending}>
           <SelectTrigger>
             <SelectValue>{categoryLabel}</SelectValue>
           </SelectTrigger>
@@ -160,7 +160,7 @@ export function MenuForm({ menu, categories }: MenuFormProps) {
       <div className="space-y-2">
         <Label>Status</Label>
         <input type="hidden" name="status" value={menuStatus} />
-        <Select value={menuStatus} onValueChange={setMenuStatus} disabled={isPending}>
+        <Select value={menuStatus} onValueChange={(v) => v != null && setMenuStatus(v)} disabled={isPending}>
           <SelectTrigger>
             <SelectValue>{MENU_STATUS_LABELS[menuStatus] ?? menuStatus}</SelectValue>
           </SelectTrigger>

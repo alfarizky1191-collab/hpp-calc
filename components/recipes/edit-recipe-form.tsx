@@ -126,7 +126,7 @@ export function EditRecipeForm({ recipe, menuId }: EditRecipeFormProps) {
 
       <div className="space-y-2">
         <Label>Status</Label>
-        <Select value={status} onValueChange={setStatus} disabled={isPending}>
+        <Select value={status} onValueChange={(v) => v != null && setStatus(v)} disabled={isPending}>
           <SelectTrigger>
             <SelectValue>{STATUS_LABELS[status] ?? status}</SelectValue>
           </SelectTrigger>

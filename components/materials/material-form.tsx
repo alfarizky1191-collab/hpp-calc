@@ -129,7 +129,7 @@ export function MaterialForm({ material, categories }: MaterialFormProps) {
       {/* Kategori â€” controlled, display label correctly */}
       <div className="space-y-2">
         <Label>Kategori</Label>
-        <Select value={categoryId} onValueChange={setCategoryId} disabled={isPending}>
+        <Select value={categoryId} onValueChange={(v) => v != null && setCategoryId(v)} disabled={isPending}>
           <SelectTrigger>
             <SelectValue>{categoryLabel}</SelectValue>
           </SelectTrigger>
@@ -238,7 +238,7 @@ export function MaterialForm({ material, categories }: MaterialFormProps) {
       <div className="space-y-2">
         <Label>Status</Label>
         <input type="hidden" name="status" value={status} />
-        <Select value={status} onValueChange={setStatus} disabled={isPending}>
+        <Select value={status} onValueChange={(v) => v != null && setStatus(v)} disabled={isPending}>
           <SelectTrigger>
             <SelectValue>{STATUS_LABELS[status] ?? status}</SelectValue>
           </SelectTrigger>

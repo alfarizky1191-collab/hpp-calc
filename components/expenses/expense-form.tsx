@@ -104,7 +104,7 @@ export function ExpenseForm({ expense, defaultPeriod }: ExpenseFormProps) {
         <Label htmlFor="category">
           Kategori <span className="text-destructive">*</span>
         </Label>
-        <Select value={category} onValueChange={setCategory} disabled={isPending}>
+        <Select value={category} onValueChange={(v) => v != null && setCategory(v)} disabled={isPending}>
           <SelectTrigger id="category">
             <SelectValue>{categoryLabel}</SelectValue>
           </SelectTrigger>

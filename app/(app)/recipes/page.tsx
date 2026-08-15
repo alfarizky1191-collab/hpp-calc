@@ -102,7 +102,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
                           <RecipeDeleteButton
                             recipeId={recipe.id}
                             recipeName={`Resep v${recipe.version}`}
-                            menuName={menu?.name}
+                            menuName={menu?.name ?? ''}
                           />
                         </div>
                       </td>
