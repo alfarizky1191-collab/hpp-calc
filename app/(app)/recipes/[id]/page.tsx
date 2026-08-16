@@ -14,6 +14,17 @@ interface RecipeDetailPageProps {
   params: Promise<{ id: string }>
 }
 
+type MaterialSummary = {
+  id: string
+  name: string
+  base_unit: string
+  unit_cost: number
+}
+
+type RecipeItemWithMaterial = {
+  materials?: MaterialSummary | null
+}
+
 export default async function RecipeDetailPage({ params }: RecipeDetailPageProps) {
   const { id } = await params
 
@@ -38,8 +49,8 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
     return await deleteRecipe(recipe!.id)
   }
 
-  // Build materials list from joined recipe_items data (guaranteed to pass RLS)
-  // plus query all org materials for the dropdown via the same authenticated client
+  // Build materials list from joined recipe_items data (when available)
+  // plus query all org materials for the dropdown via the same authenticated client.
   const supabase = await createClient()
   const { data: materialsRaw } = await supabase
     .from('materials')
@@ -47,18 +58,24 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
     .is('deleted_at', null)
     .order('name')
 
-  // Always include materials from joined items so existing recipe bahan always resolve by name
-  const materialMap = new Map<string, { id: string; name: string; base_unit: string; unit_cost: number }>()
-  // First add from items join (always available regardless of RLS on direct query)
+  const materialMap = new Map<string, MaterialSummary>()
+
+  // Type-safe access to the optional Supabase relation. The generated DB type
+  // describes recipe_items itself, while the runtime query may include `materials`.
   for (const item of items) {
-    const mat = item.materials as { id: string; name: string; base_unit: string; unit_cost: number } | null
+    const joinedItem = item as typeof item & RecipeItemWithMaterial
+    const mat = joinedItem.materials
     if (mat?.id) materialMap.set(mat.id, mat)
   }
-  // Then overlay with fresh query results (may include more materials for dropdown)
-  for (const m of (materialsRaw ?? [])) {
+
+  // Overlay with fresh query results (may include more materials for dropdown).
+  for (const m of materialsRaw ?? []) {
     materialMap.set(m.id, m)
   }
-  const materials = Array.from(materialMap.values()).sort((a, b) => a.name.localeCompare(b.name))
+
+  const materials = Array.from(materialMap.values()).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  )
 
   const initialItems = items.map((item) => ({
     material_id: item.material_id,
@@ -189,7 +206,8 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
               </thead>
               <tbody>
                 {items.map((item) => {
-                  const mat = item.materials as { name: string } | null
+                  const joinedItem = item as typeof item & RecipeItemWithMaterial
+                  const mat = joinedItem.materials as { name: string } | null | undefined
                   return (
                     <tr key={item.id} className="border-t">
                       <td className="px-4 py-2 font-medium">{mat?.name ?? '—'}</td>
