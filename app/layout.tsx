@@ -14,8 +14,28 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'HPP Manager',
-  description: 'Hitung HPP, food cost, profit, dan analisis profitabilitas menu',
+  metadataBase: new URL('https://hppin.my.id'),
+  title: {
+    default: 'HPPin — Hitung HPP, Tahu Untungnya',
+    template: '%s | HPPin',
+  },
+  description: 'HPPin membantu UMKM kuliner menghitung HPP, food cost, profit, margin, dan harga jual dengan lebih mudah.',
+  applicationName: 'HPPin',
+  keywords: ['HPP', 'HPP kuliner', 'food cost', 'harga jual', 'profit UMKM', 'kalkulator HPP'],
+  alternates: { canonical: 'https://hppin.my.id' },
+  openGraph: {
+    type: 'website',
+    url: 'https://hppin.my.id',
+    siteName: 'HPPin',
+    title: 'HPPin — Hitung HPP, Tahu Untungnya',
+    description: 'Kalkulator HPP dan analisis profitabilitas untuk bisnis kuliner.',
+    locale: 'id_ID',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'HPPin — Hitung HPP, Tahu Untungnya',
+    description: 'Kalkulator HPP dan analisis profitabilitas untuk bisnis kuliner.',
+  },
   icons: {
     icon: '/logo.png',
     apple: '/logo.png',
@@ -29,9 +49,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
         <Toaster richColors position="top-right" />
       </body>
