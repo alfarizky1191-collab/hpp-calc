@@ -114,7 +114,7 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const isPublicRoute =
-    pathname === '/' ||
+    pathname === '/' || pathname.startsWith('/donasi') ||
     PUBLIC_ROUTES.some((route) => pathname.startsWith(route))
 
   // ── 4. Auth guard ─────────────────────────────────────────────────────────
