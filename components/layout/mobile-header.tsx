@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, LayoutDashboard, Package, UtensilsCrossed, BookOpen, Receipt, TrendingUp, BarChart3, LogOut } from 'lucide-react'
+import { Menu, X, LayoutDashboard, Package, UtensilsCrossed, BookOpen, Receipt, TrendingUp, BarChart3, LogOut, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { logout } from '@/lib/auth/actions'
 import { Button } from '@/components/ui/button'
@@ -26,7 +26,7 @@ interface MobileHeaderProps {
   pageTitle?: string
 }
 
-export function MobileHeader({ userName, orgName, pageTitle }: MobileHeaderProps) {
+export function MobileHeader({ userRole, userName, orgName, pageTitle }: MobileHeaderProps) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
 
@@ -101,6 +101,24 @@ export function MobileHeader({ userName, orgName, pageTitle }: MobileHeaderProps
                 })}
               </ul>
             </nav>
+
+            {userRole === 'OWNER' && (
+              <div className="border-t px-3 py-2">
+                <Link
+                  href="/settings"
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
+                    pathname.startsWith('/settings')
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  )}
+                >
+                  <Settings className="h-4 w-4 shrink-0" />
+                  Pengaturan
+                </Link>
+              </div>
+            )}
 
             <div className="border-t px-4 py-4 flex items-center justify-between">
               <div>
