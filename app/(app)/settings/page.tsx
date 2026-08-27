@@ -1,11 +1,17 @@
 import Link from 'next/link'
-import { Shield, Tag, ChevronRight } from 'lucide-react'
+import { Shield, Tag, ChevronRight, Heart } from 'lucide-react'
 import { requireRole } from '@/lib/auth/rbac'
 
 export default async function SettingsPage() {
   await requireRole(['OWNER', 'ADMIN', 'STAFF'])
 
   const menuItems = [
+    {
+      href: '/settings/donation',
+      icon: Heart,
+      title: 'Donasi',
+      description: 'Atur rekening bank dan gambar QRIS donasi',
+    },
     {
       href: '/settings/categories',
       icon: Tag,
