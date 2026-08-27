@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ArrowLeft, CheckCircle2 } from 'lucide-react'
+import { redirect } from 'next/navigation'
 import { requireRole } from '@/lib/auth/rbac'
 import { saveDonationSettings } from '@/lib/donations/actions'
 import { createDonationClient, getQrisPublicUrl } from '@/lib/supabase/donation-server'
@@ -7,6 +8,17 @@ import { createDonationClient, getQrisPublicUrl } from '@/lib/supabase/donation-
 export default async function DonationSettingsPage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
   await requireRole(['OWNER'])
   const supabase = await createDonationClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: platformAdmin } = user
+    ? await supabase
+        .from('platform_admins')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+    : { data: null }
+
+  if (!platformAdmin) redirect('/dashboard?error=unauthorized')
+
   const { data: settings } = await supabase.from('donation_settings').select('*').eq('id', true).maybeSingle()
   const qrisUrl = getQrisPublicUrl(settings?.qris_path ?? null)
   const { saved } = await searchParams
