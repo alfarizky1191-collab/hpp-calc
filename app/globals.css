@@ -48,6 +48,12 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+@layer components {
+  .input-demo {
+    @apply h-11 w-full rounded-lg border border-[#bdcce0] bg-white px-3 text-sm text-[#10254a] outline-none transition placeholder:text-[#8391a6] focus:border-[#185adb] focus:ring-2 focus:ring-[#185adb]/15;
+  }
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
