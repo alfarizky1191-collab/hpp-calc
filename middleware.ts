@@ -129,8 +129,9 @@ export async function middleware(request: NextRequest) {
     return applySecurityHeaders(redirect)
   }
 
-  // Redirect authenticated users away from auth pages
-  if (user && isPublicRoute && pathname !== '/auth/callback') {
+  // Redirect authenticated users away from auth pages, but keep landing page public
+  const isAuthRoute = PUBLIC_ROUTES.some((route) => pathname.startsWith(route))
+  if (user && isAuthRoute && pathname !== '/auth/callback') {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     const redirect = NextResponse.redirect(url)
