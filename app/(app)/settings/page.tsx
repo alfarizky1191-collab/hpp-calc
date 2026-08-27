@@ -1,17 +1,28 @@
 import Link from 'next/link'
 import { Shield, Tag, ChevronRight, Heart } from 'lucide-react'
 import { requireRole } from '@/lib/auth/rbac'
+import { createDonationClient } from '@/lib/supabase/donation-server'
 
 export default async function SettingsPage() {
   await requireRole(['OWNER', 'ADMIN', 'STAFF'])
 
+  const donationClient = await createDonationClient()
+  const { data: { user } } = await donationClient.auth.getUser()
+  const { data: platformAdmin } = user
+    ? await donationClient
+        .from('platform_admins')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+    : { data: null }
+
   const menuItems = [
-    {
-      href: '/settings/donation',
-      icon: Heart,
-      title: 'Donasi',
-      description: 'Atur rekening bank dan gambar QRIS donasi',
-    },
+    ...(platformAdmin ? [{
+        href: '/settings/donation',
+        icon: Heart,
+        title: 'Donasi',
+        description: 'Atur rekening bank dan gambar QRIS donasi',
+      }] : []),
     {
       href: '/settings/categories',
       icon: Tag,
