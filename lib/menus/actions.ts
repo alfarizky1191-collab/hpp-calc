@@ -11,7 +11,7 @@ import {
   updatePackagingCostSchema,
 } from './schemas'
 import type { ActionResult } from '@/types'
-import type { Tables } from '@/types/database'
+import type { Tables, TablesUpdate } from '@/types/database'
 
 export type MenuRow = Tables<'menus'>
 
@@ -96,7 +96,7 @@ export async function updateMenu(
 
   const supabase = await createClient()
 
-  const updatePayload: Record<string, string | number | null> = {}
+  const updatePayload: TablesUpdate<'menus'> = {}
   if (parsed.data.name !== undefined) updatePayload.name = parsed.data.name
   if (parsed.data.categoryId !== undefined) updatePayload.category_id = parsed.data.categoryId
   if (parsed.data.description !== undefined) updatePayload.description = parsed.data.description

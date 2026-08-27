@@ -55,7 +55,6 @@ export function HppCalculationForm({
   const [selectedRecipeId, setSelectedRecipeId] = useState(activeRecipe?.id ?? '')
   const [overhead, setOverhead] = useState(defaultOverhead.toFixed(2))
   const [otherCost, setOtherCost] = useState('0')
-  const [lastResult, setLastResult] = useState<Tables<'hpp_calculations'> | null>(null)
 
   const wrappedAction = async (
     _prev: FormState,
@@ -74,13 +73,12 @@ export function HppCalculationForm({
   useEffect(() => {
     if (state.success) {
       toast.success('HPP berhasil dihitung dan disimpan')
-      setLastResult(state.data)
     }
   }, [state.success, state])
 
   // Smart pricing preview after successful calculation
   const smartPricing = (() => {
-    const hpp = lastResult?.total_hpp
+    const hpp = state.success ? state.data.total_hpp : null
     if (!hpp || hpp <= 0) return null
     try {
       return calculatePriceRecommendation({
@@ -92,7 +90,7 @@ export function HppCalculationForm({
     }
   })()
 
-  const result = lastResult
+  const result = state.success ? state.data : null
 
   return (
     <div className="space-y-6">

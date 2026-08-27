@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth/rbac'
 import { expenseSchema, updateExpenseSchema } from './schemas'
 import type { ActionResult } from '@/types'
-import type { Tables } from '@/types/database'
+import type { Tables, TablesUpdate } from '@/types/database'
 
 export type ExpenseRow = Tables<'expenses'>
 
@@ -96,7 +96,7 @@ export async function updateExpense(
 
   if (!oldData) return { success: false, error: 'Data tidak ditemukan.' }
 
-  const payload: Record<string, string | number | null> = {}
+  const payload: TablesUpdate<'expenses'> = {}
   if (parsed.data.name !== undefined) payload.name = parsed.data.name
   if (parsed.data.category !== undefined) payload.category = parsed.data.category
   if (parsed.data.amount !== undefined) payload.amount = parseFloat(parsed.data.amount)

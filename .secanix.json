@@ -1,0 +1,19 @@
+{
+  "ignore": [
+    {
+      "file": "app/auth/callback/route.ts",
+      "ruleId": "nextjs-api-route-missing-auth",
+      "reason": "Public authentication callback: exchanges a one-time Supabase code and only redirects to a validated relative path. It cannot require an existing session."
+    },
+    {
+      "file": "package-lock.json",
+      "ruleId": "GHSA-4r6h-8v6p-xvw6",
+      "reason": "SheetJS 0.20.3 is installed from the official SheetJS CDN; this advisory affects versions below 0.19.3, but OSV cannot distinguish the CDN release from the stale npm package metadata."
+    },
+    {
+      "file": "package-lock.json",
+      "ruleId": "GHSA-5pgg-2g8v-p4x9",
+      "reason": "SheetJS 0.20.3 is installed from the official SheetJS CDN; this advisory affects versions below 0.20.2, but OSV cannot distinguish the CDN release from the stale npm package metadata."
+    }
+  ]
+}

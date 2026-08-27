@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth/rbac'
 import type { ActionResult } from '@/types'
-import type { Tables } from '@/types/database'
+import type { Tables, TablesUpdate } from '@/types/database'
 
 export type CategoryRow = Tables<'categories'>
 
@@ -122,7 +122,7 @@ export async function updateCategory(
 
   const supabase = await createClient()
 
-  const updatePayload: Record<string, string> = {}
+  const updatePayload: TablesUpdate<'categories'> = {}
   if (parsed.data.name !== undefined) updatePayload.name = parsed.data.name
   if (parsed.data.type !== undefined) updatePayload.type = parsed.data.type
 

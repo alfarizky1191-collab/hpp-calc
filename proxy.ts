@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/types/database'
-import { rateLimit, getIdentifier, rateLimitResponse } from '@/lib/security/rate-limit'
+import { rateLimit, getIdentifier } from '@/lib/security/rate-limit'
 
 // ---------------------------------------------------------------------------
 // Route config
@@ -49,7 +49,7 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
 // ---------------------------------------------------------------------------
 // Main middleware
 // ---------------------------------------------------------------------------
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const identifier = getIdentifier(request)
 

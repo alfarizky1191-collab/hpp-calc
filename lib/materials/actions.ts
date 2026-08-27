@@ -6,7 +6,7 @@ import { requireRole } from '@/lib/auth/rbac'
 import { sanitizeError } from '@/lib/security/error-handler'
 import { materialSchema, updateMaterialSchema } from './schemas'
 import type { ActionResult } from '@/types'
-import type { Tables } from '@/types/database'
+import type { Tables, TablesUpdate } from '@/types/database'
 
 export type MaterialRow = Tables<'materials'>
 
@@ -122,7 +122,7 @@ export async function updateMaterial(
     return { success: false, error: 'Bahan tidak ditemukan' }
   }
 
-  const updatePayload: Record<string, string | number | boolean | null> = {}
+  const updatePayload: TablesUpdate<'materials'> = {}
   if (parsed.data.name !== undefined) updatePayload.name = parsed.data.name
   if (parsed.data.categoryId !== undefined) updatePayload.category_id = parsed.data.categoryId
   if (parsed.data.purchaseUnit !== undefined) updatePayload.purchase_unit = parsed.data.purchaseUnit
