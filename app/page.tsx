@@ -7,6 +7,7 @@ import {
   ChevronRight,
   FileSpreadsheet,
   History,
+  Heart,
   Package,
   ShieldCheck,
   Sparkles,
@@ -70,6 +71,7 @@ export default function LandingPage() {
             <a href="#fitur" className="transition hover:text-slate-950">Fitur</a>
             <a href="#cara-kerja" className="transition hover:text-slate-950">Cara kerja</a>
             <a href="#keunggulan" className="transition hover:text-slate-950">Keunggulan</a>
+            <Link href="/donasi" className="inline-flex items-center gap-1.5 text-rose-600 transition hover:text-rose-700"><Heart className="size-4" /> Donasi</Link>
           </div>
           <Link
             href="/dashboard"
@@ -237,7 +239,7 @@ export default function LandingPage() {
       <footer className="border-t border-slate-200 bg-white py-8">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-5 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between lg:px-8">
           <div className="font-bold text-slate-800">hppin.my.id</div>
-          <p>HPP, food cost, dan profitabilitas untuk bisnis kuliner.</p>
+          <div className="flex items-center gap-5"><p>HPP, food cost, dan profitabilitas untuk bisnis kuliner.</p><Link href="/donasi" className="font-semibold text-rose-600 hover:text-rose-700">Donasi</Link></div>
         </div>
       </footer>
     </main>
