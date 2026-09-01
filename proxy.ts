@@ -24,7 +24,7 @@ const RATE_LIMITED_ROUTES: Array<{
   max: number
   windowMs: number
 }> = [
-  { pattern: '/login',           namespace: 'login',          max: 10,  windowMs: 60_000  },
+  { pattern: '/login',           namespace: 'login',          max: 5,   windowMs: 900_000 },
   { pattern: '/register',        namespace: 'register',       max: 5,   windowMs: 60_000  },
   { pattern: '/forgot-password', namespace: 'forgot-password',max: 5,   windowMs: 300_000 },
   { pattern: '/api/import',      namespace: 'import',         max: 20,  windowMs: 60_000  },
@@ -34,7 +34,29 @@ const RATE_LIMITED_ROUTES: Array<{
 // ---------------------------------------------------------------------------
 // Security headers added to every response
 // ---------------------------------------------------------------------------
-function applySecurityHeaders(response: NextResponse): NextResponse {
+function createContentSecurityPolicy(nonce: string): string {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+  const isDevelopment = process.env.NODE_ENV === 'development'
+
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}'${isDevelopment ? " 'unsafe-eval'" : ''}`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data: blob: https://*.supabase.co",
+    `connect-src 'self' ${supabaseUrl} https://*.supabase.co wss://*.supabase.co`.trim(),
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "object-src 'none'",
+    "upgrade-insecure-requests",
+  ].join('; ')
+}
+
+function applySecurityHeaders(
+  response: NextResponse,
+  contentSecurityPolicy: string
+): NextResponse {
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
@@ -43,6 +65,7 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
     'Strict-Transport-Security',
     'max-age=63072000; includeSubDomains; preload'
   )
+  response.headers.set('Content-Security-Policy', contentSecurityPolicy)
   return response
 }
 
@@ -52,10 +75,22 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const identifier = getIdentifier(request)
+  const nonce = btoa(crypto.randomUUID())
+  const contentSecurityPolicy = createContentSecurityPolicy(nonce)
+  const requestHeaders = new Headers(request.headers)
+
+  // Next.js reads the nonce from the request CSP and attaches it to framework
+  // and hydration scripts automatically.
+  requestHeaders.set('x-nonce', nonce)
+  requestHeaders.set('Content-Security-Policy', contentSecurityPolicy)
+
+  const nextResponse = () => NextResponse.next({
+    request: { headers: requestHeaders },
+  })
 
   // ── 1. Rate limiting ──────────────────────────────────────────────────────
   for (const rule of RATE_LIMITED_ROUTES) {
-    if (pathname.startsWith(rule.pattern)) {
+    if (request.method === 'POST' && pathname.startsWith(rule.pattern)) {
       const result = rateLimit.check(rule.namespace, identifier, {
         max: rule.max,
         windowMs: rule.windowMs,
@@ -71,7 +106,8 @@ export async function proxy(request: NextRequest) {
                 'Retry-After': String(Math.ceil((result.resetAt - Date.now()) / 1000)),
               },
             }
-          )
+          ),
+          contentSecurityPolicy
         )
       }
       break
@@ -80,12 +116,11 @@ export async function proxy(request: NextRequest) {
 
   // ── 2. Skip session refresh for API routes (they handle auth themselves) ──
   if (API_ROUTES.some((r) => pathname.startsWith(r))) {
-    const response = NextResponse.next({ request })
-    return applySecurityHeaders(response)
+    return applySecurityHeaders(nextResponse(), contentSecurityPolicy)
   }
 
   // ── 3. Supabase session refresh ───────────────────────────────────────────
-  let supabaseResponse = NextResponse.next({ request })
+  let supabaseResponse = nextResponse()
 
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -99,7 +134,7 @@ export async function proxy(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           )
-          supabaseResponse = NextResponse.next({ request })
+          supabaseResponse = nextResponse()
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           )
@@ -126,7 +161,7 @@ export async function proxy(request: NextRequest) {
       url.searchParams.set('redirect', pathname)
     }
     const redirect = NextResponse.redirect(url)
-    return applySecurityHeaders(redirect)
+    return applySecurityHeaders(redirect, contentSecurityPolicy)
   }
 
   // Redirect authenticated users away from auth pages, but keep landing page public
@@ -135,10 +170,10 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     const redirect = NextResponse.redirect(url)
-    return applySecurityHeaders(redirect)
+    return applySecurityHeaders(redirect, contentSecurityPolicy)
   }
 
-  return applySecurityHeaders(supabaseResponse)
+  return applySecurityHeaders(supabaseResponse, contentSecurityPolicy)
 }
 
 export const config = {
