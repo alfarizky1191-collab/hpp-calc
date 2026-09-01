@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
+import { connection } from 'next/server'
 import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
@@ -42,11 +43,15 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // A per-request CSP nonce requires dynamic rendering so Next.js can attach
+  // the nonce to its framework and hydration scripts.
+  await connection()
+
   return (
     <html lang="id" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
