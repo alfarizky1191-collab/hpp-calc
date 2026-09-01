@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createDonationClient } from '@/lib/supabase/donation-server'
+import { hasValidImageSignature } from '@/lib/security/image-signature'
 
 const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp'])
 const MAX_QRIS_SIZE = 5 * 1024 * 1024
@@ -36,6 +37,11 @@ export async function saveDonationSettings(formData: FormData) {
     }
     if (qrisFile.size > MAX_QRIS_SIZE) {
       throw new Error('Ukuran gambar QRIS maksimal 5 MB.')
+    }
+
+    const signature = new Uint8Array(await qrisFile.slice(0, 12).arrayBuffer())
+    if (!hasValidImageSignature(signature, qrisFile.type)) {
+      throw new Error('Isi file QRIS tidak sesuai dengan format gambarnya.')
     }
 
     const extension = qrisFile.type === 'image/png' ? 'png' : qrisFile.type === 'image/webp' ? 'webp' : 'jpg'
