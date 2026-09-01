@@ -47,7 +47,7 @@ describe('loginSchema', () => {
 describe('registerSchema', () => {
   const valid = {
     email: 'owner@bisnis.com',
-    password: 'Password1',
+    password: 'Password1!',
     fullName: 'Budi Santoso',
     organizationName: 'Warung Makan Enak',
   }
@@ -57,17 +57,21 @@ describe('registerSchema', () => {
   })
 
   it('rejects password without uppercase', () => {
-    const r = registerSchema.safeParse({ ...valid, password: 'password1' })
+    const r = registerSchema.safeParse({ ...valid, password: 'password1!' })
     expect(r.success).toBe(false)
     expect(r.error?.errors[0]?.message).toMatch(/huruf besar/i)
   })
 
   it('rejects password without lowercase', () => {
-    expect(registerSchema.safeParse({ ...valid, password: 'PASSWORD1' }).success).toBe(false)
+    expect(registerSchema.safeParse({ ...valid, password: 'PASSWORD1!' }).success).toBe(false)
   })
 
   it('rejects password without digit', () => {
-    expect(registerSchema.safeParse({ ...valid, password: 'PasswordOnly' }).success).toBe(false)
+    expect(registerSchema.safeParse({ ...valid, password: 'PasswordOnly!' }).success).toBe(false)
+  })
+
+  it('rejects password without symbol', () => {
+    expect(registerSchema.safeParse({ ...valid, password: 'Password1' }).success).toBe(false)
   })
 
   it('rejects password shorter than 8 chars', () => {
@@ -112,20 +116,20 @@ describe('forgotPasswordSchema', () => {
 // ---------------------------------------------------------------------------
 
 describe('resetPasswordSchema', () => {
-  const valid = { password: 'NewPassword1', confirmPassword: 'NewPassword1' }
+  const valid = { password: 'NewPassword1!', confirmPassword: 'NewPassword1!' }
 
   it('accepts matching valid passwords', () => {
     expect(resetPasswordSchema.safeParse(valid).success).toBe(true)
   })
 
   it('rejects mismatched confirmPassword', () => {
-    const r = resetPasswordSchema.safeParse({ ...valid, confirmPassword: 'DifferentPass1' })
+    const r = resetPasswordSchema.safeParse({ ...valid, confirmPassword: 'DifferentPass1!' })
     expect(r.success).toBe(false)
     expect(r.error?.errors[0]?.message).toMatch(/tidak cocok/i)
   })
 
   it('error path is confirmPassword on mismatch', () => {
-    const r = resetPasswordSchema.safeParse({ password: 'Password1', confirmPassword: 'Password2' })
+    const r = resetPasswordSchema.safeParse({ password: 'Password1!', confirmPassword: 'Password2!' })
     expect(r.error?.errors[0]?.path).toContain('confirmPassword')
   })
 
