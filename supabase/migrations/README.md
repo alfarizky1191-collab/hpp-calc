@@ -9,6 +9,8 @@
 | `20260811000003_menus_recipes.sql` | Tabel menus, recipes, recipe_items, packaging_costs, enforce single active recipe per menu |
 | `20260811000004_expenses_hpp_audit.sql` | Tabel expenses, hpp_calculations (immutable snapshot), audit_logs (append-only + trigger prevent mutation) |
 | `20260811000005_helper_functions.sql` | Functions: get_my_org_id, get_my_role, is_org_member, log_audit, can_manage |
+| `20260901163210_complete_security_hardening.sql` | Least-privilege grants, authenticated audit logging, and distributed rate limiting |
+| `20260901163616_add_rate_limit_primary_key.sql` | Primary key for the private distributed rate-limit table |
 | `20260811000006_rls_policies.sql` | RLS policies semua tenant-owned tables |
 
 ---
