@@ -23,8 +23,8 @@ export const registerSchema = z.object({
     .min(8, 'Password minimal 8 karakter')
     .max(72, 'Password maksimal 72 karakter')
     .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      'Password harus mengandung huruf besar, huruf kecil, dan angka'
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?`~])/,
+      'Password harus mengandung huruf besar, huruf kecil, angka, dan simbol'
     ),
   fullName: z
     .string()
@@ -51,8 +51,8 @@ export const resetPasswordSchema = z
       .min(8, 'Password minimal 8 karakter')
       .max(72, 'Password maksimal 72 karakter')
       .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        'Password harus mengandung huruf besar, huruf kecil, dan angka'
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?`~])/,
+        'Password harus mengandung huruf besar, huruf kecil, angka, dan simbol'
       ),
     confirmPassword: z.string().min(1, 'Konfirmasi password wajib diisi'),
   })
