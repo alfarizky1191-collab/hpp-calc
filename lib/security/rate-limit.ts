@@ -49,6 +49,76 @@ export interface RateLimitResult {
   resetAt: number
 }
 
+const DISTRIBUTED_NAMESPACES = new Set([
+  'login',
+  'register',
+  'forgot-password',
+  'import',
+  'export',
+])
+
+async function sha256(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value)
+  const digest = await crypto.subtle.digest('SHA-256', bytes)
+  return Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, '0')
+  ).join('')
+}
+
+/**
+ * Check the shared database-backed limiter. If Supabase is temporarily
+ * unavailable, fall back to the local limiter so authentication still works
+ * with a meaningful safety layer.
+ */
+export async function checkDistributedRateLimit(
+  namespace: string,
+  identifier: string,
+  options: RateLimitOptions
+): Promise<RateLimitResult> {
+  if (!DISTRIBUTED_NAMESPACES.has(namespace)) {
+    return rateLimit.check(namespace, identifier, options)
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!supabaseUrl || !anonKey) {
+    return rateLimit.check(namespace, identifier, options)
+  }
+
+  try {
+    const response = await fetch(`${supabaseUrl}/rest/v1/rpc/consume_rate_limit`, {
+      method: 'POST',
+      headers: {
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        p_namespace: namespace,
+        p_identifier_hash: await sha256(identifier),
+      }),
+      cache: 'no-store',
+    })
+
+    if (!response.ok) throw new Error(`Rate limiter returned ${response.status}`)
+    const rows = await response.json() as Array<{
+      allowed: boolean
+      remaining: number
+      reset_at: string
+    }>
+    const result = rows[0]
+    if (!result) throw new Error('Rate limiter returned no result')
+
+    return {
+      allowed: result.allowed,
+      remaining: result.remaining,
+      resetAt: new Date(result.reset_at).getTime(),
+    }
+  } catch {
+    return rateLimit.check(namespace, identifier, options)
+  }
+}
+
 export const rateLimit = {
   /**
    * Check and record a request for the given key.
