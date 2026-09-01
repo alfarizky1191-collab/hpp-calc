@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/types/database'
-import { rateLimit, getIdentifier } from '@/lib/security/rate-limit'
+import { checkDistributedRateLimit, getIdentifier } from '@/lib/security/rate-limit'
 
 // ---------------------------------------------------------------------------
 // Route config
@@ -91,7 +91,7 @@ export async function proxy(request: NextRequest) {
   // ── 1. Rate limiting ──────────────────────────────────────────────────────
   for (const rule of RATE_LIMITED_ROUTES) {
     if (request.method === 'POST' && pathname.startsWith(rule.pattern)) {
-      const result = rateLimit.check(rule.namespace, identifier, {
+      const result = await checkDistributedRateLimit(rule.namespace, identifier, {
         max: rule.max,
         windowMs: rule.windowMs,
       })
